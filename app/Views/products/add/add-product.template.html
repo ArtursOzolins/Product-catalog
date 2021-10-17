@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Product catalog</title>
+</head>
+<body>
+<br>
+<button type="button" onclick="location.href = '/logout';">Logout</button>
+</br>
+
+<form action="/products/createdata" method="post">
+    <label for="product">Add new product in category: {{ category }}</label><br>
+    <input type="hidden" id="category" name="category" value="{{ category }}"><br>
+    <input type="text" id="product" name="product"><br>
+    <input type="submit" value="Submit">
+</form>
+
+</body>
+</html>

@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Product catalog</title>
+</head>
+<body>
+<br>
+<button type="button" onclick="location.href = '/logout';">Logout</button>
+</br>
+<h1>Editing product: {{ product }}</h1>
+<form action="/products/edit/save" method="post">
+    <label for="newproduct">Enter a new name of the product:</label><br>
+    <input type="hidden" id="productToEdit" name="productToEdit" value="{{ product }}"><br>
+    <input type="text" id="newproduct" name="newproduct"><br>
+    <input type="submit" value="Submit">
+</form>
+
+</body>
+</html>

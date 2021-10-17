@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Product catalog</title>
+</head>
+<body>
+<br>
+<button type="button" onclick="location.href = '/logout';">Logout</button>
+</br>
+
+    {% for product in products %}
+        <li>{{ product }}</li>
+        <button type="button" onclick="location.href = '/products/edit/{{product.product}}';">Edit</button>
+        <a href='/products/delete/{{product.product}}' onclick="return confirm('Are you sure?');">Delete</a>
+    {% endfor %}
+<button type="button" onclick="location.href = '/products';">Back</button>
+</body>
+</html>

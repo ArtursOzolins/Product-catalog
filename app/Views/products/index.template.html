@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Product catalog</title>
+</head>
+<body>
+<br>
+    <button type="button" onclick="location.href = '/logout';">Logout</button>
+</br>
+
+<h1>Registered products:</h1>
+<ul>
+        {% for product in products %}
+            <li>{{ product.product }}</li>
+            <button type="button" onclick="location.href = '/products/edit/{{product.product}}';">Edit</button>
+            <a href='/products/delete/{{product.product}}' onclick="return confirm('Are you sure?');">Delete</a>
+        {% endfor %}
+</ul>
+<button type="button" onclick="location.href = '/products/categories';">Add product</button>
+        <form action="/products/categories/found" method="post">
+            <label for="category">Enter category you want to find records of:</label><br>
+            <input type="text" id="category" name="category"><br>
+            <input type="submit" value="Submit">
+        </form>
+</body>
+</html>
