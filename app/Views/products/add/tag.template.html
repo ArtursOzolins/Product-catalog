@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Product catalog</title>
+</head>
+<body>
+<br>
+<button type="button" onclick="location.href = '/logout';">Logout</button>
+</br>
+<h1>Choose tag:</h1>
+<ul>
+    <form method="post" action="/products/createdata">
+        <input type="hidden" id="category" name="category" value="{{ category }}"><br>
+        <input type="hidden" id="product" name="product" value="{{ product }}"><br>
+        {% for tag in tags %}
+        <input type="checkbox" name="checked_tag_id[]" value="{{ tag.tag_id }}">
+        <label>{{ tag.tag }}</label><br>
+        {% endfor %}
+        <input type="submit" value="Submit">
+    </form>
+</ul>
+
+</body>
+</html>
