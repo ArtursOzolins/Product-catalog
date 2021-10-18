@@ -17,13 +17,16 @@ $dispatcher = FastRoute\simpleDispatcher(function(FastRoute\RouteCollector $r) {
     $r->addRoute('GET', '/products/categories/addCategory', 'App\Controllers\ProductsController@addCategory');
     $r->addRoute('POST', '/products/categories/addProduct', 'App\Controllers\ProductsController@addProduct');
     $r->addRoute('GET', '/products/categories/addProduct', 'App\Controllers\ProductsController@addProduct');
+    $r->addRoute('POST', '/products/categories/addProduct/addTag', 'App\Controllers\ProductsController@addTag');
+    $r->addRoute('GET', '/products/categories/addProduct/addTag', 'App\Controllers\ProductsController@addTag');
     $r->addRoute('POST', '/products/createdata', 'App\Controllers\ProductsController@createData');
     $r->addRoute('POST', '/products/createcategory', 'App\Controllers\ProductsController@createCategory');
     $r->addRoute('GET', '/products/edit/{product}', 'App\Controllers\ProductsController@editProduct');
     $r->addRoute('POST', '/products/edit/save', 'App\Controllers\ProductsController@saveEditedProduct');
     $r->addRoute('GET', '/products/delete/{product}', 'App\Controllers\ProductsController@deleteProduct');
 
-    $r->addRoute('POST', '/products/categories/found', 'App\Controllers\ProductsController@search');
+    $r->addRoute('POST', '/products/categories/foundByCategory', 'App\Controllers\ProductsController@searchByCategory');
+    $r->addRoute('POST', '/products/categories/foundByTag', 'App\Controllers\ProductsController@searchByTag');
     // {id} must be a number (\d+)
     //$r->addRoute('GET', '/user/{id:\d+}', 'get_user_handler');
     // The /{title} suffix is optional

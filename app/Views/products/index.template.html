@@ -12,16 +12,33 @@
 <h1>Registered products:</h1>
 <ul>
         {% for product in products %}
-            <li>{{ product.product }}</li>
+            <li>{{ product }}</li>
             <button type="button" onclick="location.href = '/products/edit/{{product.product}}';">Edit</button>
-            <a href='/products/delete/{{product.product}}' onclick="return confirm('Are you sure?');">Delete</a>
+            <a href='/products/delete/{{product}}' onclick="return confirm('Are you sure?');">Delete</a>
         {% endfor %}
 </ul>
 <button type="button" onclick="location.href = '/products/categories';">Add product</button>
-        <form action="/products/categories/found" method="post">
-            <label for="category">Enter category you want to find records of:</label><br>
-            <input type="text" id="category" name="category"><br>
-            <input type="submit" value="Submit">
-        </form>
+
+
+<h1>Choose category you want to find records of:</h1>
+<form method="post" action="/products/categories/foundByCategory">
+    <input type="hidden" name="user" value="{{ user }}">
+    {% for category in categories %}
+    <input type="radio" name="category" value="{{ category.category }}">
+    <label>{{ category.category }}</label><br>
+    {% endfor %}
+    <input type="submit" value="Submit">
+</form>
+
+<h1>Choose tag you want to find records of:</h1>
+    <form method="post" action="/products/categories/foundByTag">
+        <input type="hidden" name="user" value="{{ user }}">
+        {% for tag in tags %}
+        <input type="radio" name="tag_id" value="{{ tag.tag_id }}">
+        <label>{{ tag.tag }}</label><br>
+        {% endfor %}
+        <input type="submit" value="Submit">
+    </form>
+
 </body>
 </html>

@@ -27,9 +27,16 @@ class ProductsController
 
     public function index()
     {
+        $categories = $this->repository->getCategories($this->user);
+        $tags = $this->repository->getTags();
         $products = $this->repository->getProducts($this->user);
-        //var_dump($products);
-        echo $this->twig->render('products/index.template.html', array('products' => $products));
+
+        echo $this->twig->render('products/index.template.html', array(
+            'categories' => $categories,
+            'products' => $products,
+            'tags' => $tags,
+            'user' => $this->user
+        ));
     }
 
     public function showCategories()
@@ -54,9 +61,20 @@ class ProductsController
         echo $this->twig->render('products/add/add-product.template.html', ['category' => $_POST['category']]);
     }
 
+    public function addTag()
+    {
+        $tags = $this->repository->getTags();
+        echo $this->twig->render('products/add/tag.template.html', [
+            'category' => $_POST['category'],
+            'product' => $_POST['product'],
+            'tags' => $tags
+        ]);
+    }
+
     public function createData()
     {
        $this->repository->addToProducts($this->user, new Product($_POST['category'], $_POST['product']));
+       $this->repository->addToTagMap(new Product($_POST['category'], $_POST['product']), $_POST['tag_id']);
        header('Location: /products');
     }
 
@@ -77,9 +95,26 @@ class ProductsController
         header('Location: /products');
     }
 
-    public function search()
+    public function searchByCategory()
     {
-        $products = $this->repository->find($this->user, $_POST['category']);
+        $products = $this->repository->findByCategory($_POST['user'], $_POST['category']);
+
+        echo $this->twig->render('products/found-products.template.html', ['products' => $products]);
+    }
+
+    public function searchByTag()
+    {
+        $productsByTag = $this->repository->findByTag($_POST['tag_id']);
+        $productsByUser = $this->repository->getProducts($_POST['user']);
+        $products = [];
+        foreach ($productsByTag as $product)
+        {
+            if (array_search($product, $productsByUser) !== false)
+            {
+                array_push($products, $product);
+            }
+        }
+
         echo $this->twig->render('products/found-products.template.html', ['products' => $products]);
     }
 

@@ -49,7 +49,17 @@ class MysqlProductsRepository implements ProductsRepository
         $stmt->execute([
             $user,
             $product->getCategory(),
-            $product->getName()
+            $product->getName(),
+        ]);
+    }
+
+    public function addToTagMap(Product $product, string $tag_id): void
+    {
+        $sql = "INSERT INTO tag_map (product, tag_id) VALUES (?, ?)";
+        $stmt = $this->connection->prepare($sql);
+        $stmt->execute([
+            $product->getName(),
+            $tag_id
         ]);
     }
 
@@ -71,10 +81,24 @@ class MysqlProductsRepository implements ProductsRepository
         {
             if ($data['user'] === $user)
             {
-                array_push($userData, $data);
+                array_push($userData, $data['product']);
             }
         }
         return $userData;
+    }
+
+    public function getTags(): array
+    {
+        $sql = "SELECT tag_id, tag FROM tags";
+        $stmt = $this->connection->query($sql);
+        $allData = $stmt->fetchAll();
+
+        $tags = [];
+        foreach ($allData as $data)
+        {
+            array_push($tags, $data);
+        }
+        return $tags;
     }
 
     public function editExistingProduct(string $user, string $productToEdit, string $newProduct): void
@@ -102,7 +126,7 @@ class MysqlProductsRepository implements ProductsRepository
         $stmt->execute($data);
     }
 
-    public function find(string $user, string $category): array
+    public function findByCategory(string $user, string $category): array
     {
         $sql = "SELECT * FROM products";
         $stmt = $this->connection->query($sql);
@@ -112,6 +136,24 @@ class MysqlProductsRepository implements ProductsRepository
         foreach ($allData as $data)
         {
             if ($data['user'] === $user && $data['category'] === $category)
+            {
+                array_push($found, $data['product']);
+            }
+        }
+        return $found;
+    }
+
+    public function findByTag(string $tag_id): array
+    {
+        $sql = "SELECT * FROM tag_map";
+        $stmt = $this->connection->query($sql);
+        $allData = $stmt->fetchAll();
+
+
+        $found = [];
+        foreach ($allData as $data)
+        {
+            if ($data['tag_id'] === $tag_id)
             {
                 array_push($found, $data['product']);
             }
