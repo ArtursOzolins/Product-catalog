@@ -73,8 +73,12 @@ class ProductsController
 
     public function createData()
     {
+
        $this->repository->addToProducts($this->user, new Product($_POST['category'], $_POST['product']));
-       $this->repository->addToTagMap(new Product($_POST['category'], $_POST['product']), $_POST['tag_id']);
+       foreach ($_POST['checked_tag_id'] as $id)
+       {
+           $this->repository->addToTagMap(new Product($_POST['category'], $_POST['product']), $id);
+       }
        header('Location: /products');
     }
 
