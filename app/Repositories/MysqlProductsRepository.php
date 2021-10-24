@@ -2,19 +2,24 @@
 
 namespace App\Repositories;
 
+require_once 'app/config.php';
+
+use App\Models\Collections\ProductsCollection;
 use App\Models\Product;
+use LengthException;
 use PDO;
 use PDOException;
 
 class MysqlProductsRepository implements ProductsRepository
 {
-
+    private ProductsCollection $collection;
     public function __construct()
     {
-        $host = '127.0.0.1';
-        $db   = 'product-catalog';
-        $user = 'root';
-        $pass = '123456';
+        require 'app/config.php';
+        $host = $config['DB_HOST'];
+        $db   = $config['DB_DATABASE'];
+        $user = $config['DB_USERNAME'];
+        $pass = $config['DB_PASSWORD'];
 
 
         $dsn = "mysql:host=$host;dbname=$db;charset=UTF8";
@@ -23,23 +28,35 @@ class MysqlProductsRepository implements ProductsRepository
         } catch (PDOException $e) {
             throw new PDOException($e->getMessage(), (int)$e->getCode());
         }
+        $this->collection = new ProductsCollection();
     }
 
-    public function getCategories(string $user): array
+    public function getProducts(string $user): ProductsCollection
     {
-        $sql = "SELECT user, category FROM categories";
+        $sql = "SELECT category, product FROM products WHERE user = '$user'";
         $stmt = $this->connection->query($sql);
         $allData = $stmt->fetchAll();
 
-        $userData = [];
         foreach ($allData as $data)
         {
-            if ($data['user'] === $user)
-            {
-                array_push($userData, $data);
-            }
+            $this->collection->addToProductsCollection(new Product($data['category'], $data['product']));
         }
-        return $userData;
+
+        return $this->collection;
+    }
+
+    public function getTags(): array
+    {
+        $sql = "SELECT tag_id, tag FROM tags";
+        $stmt = $this->connection->query($sql);
+        $allData = $stmt->fetchAll();
+
+        foreach ($allData as $data)
+        {
+            $tags[] = ['tag_id' => $data['tag_id'], 'tag' => $data['tag']];
+        }
+
+        return $tags;
     }
 
     public function addToProducts(string $user, Product $product): void
@@ -51,54 +68,6 @@ class MysqlProductsRepository implements ProductsRepository
             $product->getCategory(),
             $product->getName(),
         ]);
-    }
-
-    public function addToTagMap(Product $product, string $tag_id): void
-    {
-        $sql = "INSERT INTO tag_map (product, tag_id) VALUES (?, ?)";
-        $stmt = $this->connection->prepare($sql);
-        $stmt->execute([
-            $product->getName(),
-            $tag_id
-        ]);
-    }
-
-    public function addToCategories(string $user, string $category): void
-    {
-        $sql = "INSERT INTO categories (user, category) VALUES (?, ?)";
-        $stmt = $this->connection->prepare($sql);
-        $stmt->execute([$user, $category]);
-    }
-
-    public function getProducts(string $user): array
-    {
-        $sql = "SELECT user, product FROM products";
-        $stmt = $this->connection->query($sql);
-        $allData = $stmt->fetchAll();
-
-        $userData = [];
-        foreach ($allData as $data)
-        {
-            if ($data['user'] === $user)
-            {
-                array_push($userData, $data['product']);
-            }
-        }
-        return $userData;
-    }
-
-    public function getTags(): array
-    {
-        $sql = "SELECT tag_id, tag FROM tags";
-        $stmt = $this->connection->query($sql);
-        $allData = $stmt->fetchAll();
-
-        $tags = [];
-        foreach ($allData as $data)
-        {
-            array_push($tags, $data);
-        }
-        return $tags;
     }
 
     public function editExistingProduct(string $user, string $productToEdit, string $newProduct): void
@@ -128,35 +97,14 @@ class MysqlProductsRepository implements ProductsRepository
 
     public function findByCategory(string $user, string $category): array
     {
-        $sql = "SELECT * FROM products";
+        $sql = "SELECT product FROM products WHERE user = '$user' AND category = '$category'";
         $stmt = $this->connection->query($sql);
         $allData = $stmt->fetchAll();
 
         $found = [];
         foreach ($allData as $data)
         {
-            if ($data['user'] === $user && $data['category'] === $category)
-            {
                 array_push($found, $data['product']);
-            }
-        }
-        return $found;
-    }
-
-    public function findByTag(string $tag_id): array
-    {
-        $sql = "SELECT * FROM tag_map";
-        $stmt = $this->connection->query($sql);
-        $allData = $stmt->fetchAll();
-
-
-        $found = [];
-        foreach ($allData as $data)
-        {
-            if ($data['tag_id'] === $tag_id)
-            {
-                array_push($found, $data['product']);
-            }
         }
         return $found;
     }

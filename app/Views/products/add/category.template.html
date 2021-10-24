@@ -8,17 +8,24 @@
     <br>
         <button type="button" onclick="location.href = '/logout';">Logout</button>
     </br>
+    <br>
+    <label>{{ error }}</label>
+    </br>
 <h1>Choose category:</h1>
     <ul>
         <form method="post" action="/products/categories/addProduct">
                 {% for category in categories %}
-                    <input type="radio" name="category" value="{{ category.category }}">
-                    <label>{{ category.category }}</label><br>
+                    <input type="radio" name="category" value="{{ category.getCategory }}">
+                    <label>{{ category.getCategory }}</label><br>
                 {% endfor %}
             <input type="submit" value="Submit">
         </form>
     </ul>
-    <button type="button" onclick="location.href = '/products/categories/addCategory';">Add new category to the list</button>
+    <button type="button" onclick="location.href = '/products/categories/addUserCategory';">Add new category to the list</button>
+
+    <br>
+    <button type="button" onclick="location.href = '/products';">Back</button>
+    </br>
 
 </body>
 </html>

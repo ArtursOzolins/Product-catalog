@@ -2,10 +2,17 @@
 
 namespace App\Controllers;
 
+use App\Models\Collections\ProductsCollection;
 use App\Models\Product;
 use App\Models\User;
+use App\Repositories\CategoriesRepository;
 use App\Repositories\MysqlProductsRepository;
 use App\Repositories\ProductsRepository;
+use App\Repositories\TagsRepository;
+use App\Validations\ProductValidation;
+use Exception;
+use InvalidArgumentException;
+use LengthException;
 use Twig\Environment;
 use Twig\Loader\FilesystemLoader;
 
@@ -13,73 +20,108 @@ class ProductsController
 {
 
     private Environment $twig;
-    private ProductsRepository $repository;
+    private ProductsRepository $productsRepository;
+    private CategoriesRepository $categoriesRepository;
+    private TagsRepository $tagsRepository;
     private string $user;
+    private ProductValidation $productValidation;
+    private array $productsCollection;
+    private array $categoriesCollection;
+    private array $tagsCollection;
 
-    public function __construct()
+    public function __construct($container)
     {
         $this->user = $_SESSION['user'];
-        $this->repository = new MysqlProductsRepository();
+        $this->productsRepository = $container->get(ProductsRepository::class);
+        $this->categoriesRepository = $container->get(CategoriesRepository::class);
+        $this->tagsRepository = $container->get(TagsRepository::class);
 
         $loader = new FilesystemLoader('app/Views');
         $this->twig = new Environment($loader);
+        $this->productValidation = new ProductValidation();
+
+        $this->productsCollection = $this->productsRepository->getProducts($this->user)->getProductsCollection();
+        $this->categoriesCollection = $this->categoriesRepository->getCategories($this->user)->getCategoriesCollection();
+        $this->tagsCollection = $this->tagsRepository->getTags()->getTagsCollection();
     }
 
     public function index()
     {
-        $categories = $this->repository->getCategories($this->user);
-        $tags = $this->repository->getTags();
-        $products = $this->repository->getProducts($this->user);
+        $tags = $this->productsRepository->getTags();
 
-        echo $this->twig->render('products/index.template.html', array(
-            'categories' => $categories,
-            'products' => $products,
+        echo $this->twig->render('products/index.template.html', [
+            'productsCollection' => $this->productsCollection,
+            'categoriesCollection' => $this->categoriesCollection,
             'tags' => $tags,
             'user' => $this->user
-        ));
+        ]);
     }
 
-    public function showCategories()
+    public function showUserCategories()
     {
-        $categories = $this->repository->getCategories($this->user);
-        echo $this->twig->render('products/add/category.template.html', array('categories' => $categories));
+        echo $this->twig->render('products/add/category.template.html', [
+            'error' => $_GET['error'],
+            'categories' => $this->categoriesCollection
+        ]);
     }
 
-    public function addCategory()
+    public function addUserCategory()
     {
         echo $this->twig->render('products/add/add-category.template.html');
     }
 
-    public function createCategory()
+    public function createUserCategory()
     {
-        $this->repository->addToCategories($_SESSION['user'], $_POST['category']);
-        header('Location: /products/categories');
+        try {
+            $this->productValidation->validateNewProduct($_POST['category']);
+            $this->categoriesRepository->addToCategories($this->user, $_POST['category']);
+            header('Location: /products/categories');
+        } catch (LengthException $e)
+        {
+            header('Location: /products/categories?error=' . $e->getMessage());
+        }
     }
 
     public function addProduct()
     {
-        echo $this->twig->render('products/add/add-product.template.html', ['category' => $_POST['category']]);
+        try {
+            $this->productValidation->validateNewProduct($_POST['category']);
+            echo $this->twig->render('products/add/add-product.template.html', [
+                'category' => $_POST['category']
+            ]);
+        } catch (LengthException $e) {
+            header('Location: /products/categories?error=' . $e->getMessage());
+        }
     }
 
     public function addTag()
     {
-        $tags = $this->repository->getTags();
-        echo $this->twig->render('products/add/tag.template.html', [
-            'category' => $_POST['category'],
-            'product' => $_POST['product'],
-            'tags' => $tags
-        ]);
+        try {
+            $this->productValidation->validateNewProduct($_POST['product']);
+            echo $this->twig->render('products/add/tag.template.html', [
+                'category' => $_POST['category'],
+                'product' => $_POST['product'],
+                'tags' => $this->tagsCollection
+            ]);
+        } catch (LengthException $e) {
+            header('Location: /products/categories?error=' . $e->getMessage());
+        }
+
     }
 
     public function createData()
     {
+        try {
+            $this->productValidation->validateNewProduct($_POST['checked_tag_id'][0]);
+            $this->productsRepository->addToProducts($this->user, new Product($_POST['category'], $_POST['product']));
+            foreach ($_POST['checked_tag_id'] as $tag) {
+                $this->tagsRepository->addToTagMap(new Product($_POST['category'], $_POST['product']), $tag);
+            }
+            header('Location: /products');
+        } catch (LengthException $e) {
+            header('Location: /products/categories?error=' . $e->getMessage());
+        }
 
-       $this->repository->addToProducts($this->user, new Product($_POST['category'], $_POST['product']));
-       foreach ($_POST['checked_tag_id'] as $id)
-       {
-           $this->repository->addToTagMap(new Product($_POST['category'], $_POST['product']), $id);
-       }
-       header('Location: /products');
     }
 
     public function editProduct(string $input)
@@ -89,33 +131,38 @@ class ProductsController
 
     public function saveEditedProduct(): void
     {
-        $this->repository->editExistingProduct($this->user, $_POST['productToEdit'], $_POST['newproduct']);
+        $this->productsRepository->editExistingProduct($this->user, $_POST['productToEdit'], $_POST['newproduct']);
         header('Location: /products');
     }
 
     public function deleteProduct(string $product): void
     {
-        $this->repository->deleteProduct($this->user, $product);
+        $this->productsRepository->deleteProduct($this->user, $product);
         header('Location: /products');
     }
 
     public function searchByCategory()
     {
-        $products = $this->repository->findByCategory($_POST['user'], $_POST['category']);
+        $products = $this->productsRepository->findByCategory($_POST['user'], $_POST['category']);
 
         echo $this->twig->render('products/found-products.template.html', ['products' => $products]);
     }
 
     public function searchByTag()
     {
-        $productsByTag = $this->repository->findByTag($_POST['tag_id']);
-        $productsByUser = $this->repository->getProducts($_POST['user']);
+        $productsByTag = $this->tagsRepository->findByTag($_POST['tag_id']);
+        $userProductCollection = $this->productsRepository->getProducts($_POST['user'])->getProductsCollection();
+        $productsByUser = [];
+        foreach ($userProductCollection as $product)
+        {
+            $productsByUser[] = $product->getName();
+        }
         $products = [];
         foreach ($productsByTag as $product)
         {
             if (array_search($product, $productsByUser) !== false)
             {
-                array_push($products, $product);
+                $products[] = $product;
             }
         }
 

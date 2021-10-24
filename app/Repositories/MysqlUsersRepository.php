@@ -6,18 +6,18 @@ use App\Models\User;
 use PDO;
 use PDOException;
 
+
 class MysqlUsersRepository implements UsersRepository
 {
-
     private PDO $connection;
 
     public function __construct()
     {
-        $host = '127.0.0.1';
-        $db   = 'product-catalog';
-        $user = 'root';
-        $pass = '123456';
-
+        require 'app/config.php';
+        $host = $config['DB_HOST'];
+        $db   = $config['DB_DATABASE'];
+        $user = $config['DB_USERNAME'];
+        $pass = $config['DB_PASSWORD'];
 
         $dsn = "mysql:host=$host;dbname=$db;charset=UTF8";
         try {

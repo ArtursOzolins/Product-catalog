@@ -14,12 +14,16 @@
         <input type="hidden" id="category" name="category" value="{{ category }}"><br>
         <input type="hidden" id="product" name="product" value="{{ product }}"><br>
         {% for tag in tags %}
-        <input type="checkbox" name="checked_tag_id[]" value="{{ tag.tag_id }}">
-        <label>{{ tag.tag }}</label><br>
+        <input type="checkbox" name="checked_tag_id[]" value="{{ tag.getTagId }}">
+        <label>{{ tag.getTag }}</label><br>
         {% endfor %}
         <input type="submit" value="Submit">
     </form>
 </ul>
+
+<br>
+<button type="button" onclick="location.href = '/products';">Back</button>
+</br>
 
 </body>
 </html>

@@ -11,10 +11,10 @@
 
 <h1>Registered products:</h1>
 <ul>
-        {% for product in products %}
-            <li>{{ product }}</li>
-            <button type="button" onclick="location.href = '/products/edit/{{product.product}}';">Edit</button>
-            <a href='/products/delete/{{product}}' onclick="return confirm('Are you sure?');">Delete</a>
+        {% for product in productsCollection %}
+            <li>{{ product.getName }}</li>
+            <button type="button" onclick="location.href = '/products/edit/{{product.getName}}';">Edit</button>
+            <a href='/products/delete/{{product.getName}}' onclick="return confirm('Are you sure?');">Delete</a>
         {% endfor %}
 </ul>
 <button type="button" onclick="location.href = '/products/categories';">Add product</button>
@@ -23,9 +23,9 @@
 <h1>Choose category you want to find records of:</h1>
 <form method="post" action="/products/categories/foundByCategory">
     <input type="hidden" name="user" value="{{ user }}">
-    {% for category in categories %}
-    <input type="radio" name="category" value="{{ category.category }}">
-    <label>{{ category.category }}</label><br>
+    {% for category in categoriesCollection %}
+    <input type="radio" name="category" value="{{ category.getCategory }}">
+    <label>{{ category.getCategory }}</label><br>
     {% endfor %}
     <input type="submit" value="Submit">
 </form>

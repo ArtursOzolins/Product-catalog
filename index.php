@@ -1,36 +1,57 @@
 <?php
 
+use App\Container;
+use App\Repositories\CategoriesRepository;
+use App\Repositories\MysqlCategoriesRepository;
+use App\Repositories\MysqlProductsRepository;
+use App\Repositories\MysqlTagsRepository;
+use App\Repositories\MysqlUsersRepository;
+use App\Repositories\ProductsRepository;
+use App\Repositories\TagsRepository;
+use App\Repositories\UsersRepository;
+use DI\ContainerBuilder;
+
 require_once "vendor/autoload.php";
 
 session_start();
+
+
+$repositories = [
+    UsersRepository::class => new MysqlUsersRepository(),
+    CategoriesRepository::class => new MysqlCategoriesRepository(),
+    ProductsRepository::class => new MysqlProductsRepository(),
+    TagsRepository::class => new MysqlTagsRepository()
+];
+
+$builder = new ContainerBuilder();
+$builder->addDefinitions($repositories);
+$container = $builder->build();
+
+
 
 $dispatcher = FastRoute\simpleDispatcher(function(FastRoute\RouteCollector $r) {
     $r->addRoute('GET', '/', 'App\Controllers\UserController@index');
     $r->addRoute('GET', '/register', 'App\Controllers\UserController@registerForm');
     $r->addRoute('POST', '/register', 'App\Controllers\UserController@register');
-    $r->addRoute('GET', '/login', 'App\Controllers\UserController@login');
-    $r->addRoute('POST', '/', 'App\Controllers\UserController@validate');
-    $r->addRoute('GET', '/logout', 'App\Controllers\UserController@logout');
+    $r->addRoute('GET', '/login', 'App\Middlewares\Middleware@login');
+    $r->addRoute('POST', '/', 'App\Middlewares\Middleware@authenticate');
+    $r->addRoute('GET', '/logout', 'App\Middlewares\Middleware@logout');
 
     $r->addRoute('GET', '/products', 'App\Controllers\ProductsController@index');
-    $r->addRoute('GET', '/products/categories', 'App\Controllers\ProductsController@showCategories');
-    $r->addRoute('GET', '/products/categories/addCategory', 'App\Controllers\ProductsController@addCategory');
+    $r->addRoute('GET', '/products/categories', 'App\Controllers\ProductsController@showUserCategories');
+    $r->addRoute('GET', '/products/categories/addUserCategory', 'App\Controllers\ProductsController@addUserCategory');
     $r->addRoute('POST', '/products/categories/addProduct', 'App\Controllers\ProductsController@addProduct');
     $r->addRoute('GET', '/products/categories/addProduct', 'App\Controllers\ProductsController@addProduct');
     $r->addRoute('POST', '/products/categories/addProduct/addTag', 'App\Controllers\ProductsController@addTag');
     $r->addRoute('GET', '/products/categories/addProduct/addTag', 'App\Controllers\ProductsController@addTag');
     $r->addRoute('POST', '/products/createdata', 'App\Controllers\ProductsController@createData');
-    $r->addRoute('POST', '/products/createcategory', 'App\Controllers\ProductsController@createCategory');
+    $r->addRoute('POST', '/products/createUserCategory', 'App\Controllers\ProductsController@createUserCategory');
     $r->addRoute('GET', '/products/edit/{product}', 'App\Controllers\ProductsController@editProduct');
     $r->addRoute('POST', '/products/edit/save', 'App\Controllers\ProductsController@saveEditedProduct');
     $r->addRoute('GET', '/products/delete/{product}', 'App\Controllers\ProductsController@deleteProduct');
 
     $r->addRoute('POST', '/products/categories/foundByCategory', 'App\Controllers\ProductsController@searchByCategory');
     $r->addRoute('POST', '/products/categories/foundByTag', 'App\Controllers\ProductsController@searchByTag');
-    // {id} must be a number (\d+)
-    //$r->addRoute('GET', '/user/{id:\d+}', 'get_user_handler');
-    // The /{title} suffix is optional
-    //$r->addRoute('GET', '/articles/{id:\d+}[/{title}]', 'get_article_handler');
 });
 
 // Fetch method and URI from somewhere
@@ -57,7 +78,7 @@ switch ($routeInfo[0]) {
         $vars = $routeInfo[2];
 
         [$controller, $method] = explode('@', $handler);
-        $controller = new $controller();
+        $controller = new $controller($container);
         $controller->$method($vars['product']);
         break;
 }
