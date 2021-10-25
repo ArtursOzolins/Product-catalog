@@ -34,8 +34,8 @@
     <form method="post" action="/products/categories/foundByTag">
         <input type="hidden" name="user" value="{{ user }}">
         {% for tag in tags %}
-        <input type="radio" name="tag_id" value="{{ tag.tag_id }}">
-        <label>{{ tag.tag }}</label><br>
+        <input type="radio" name="tag_id" value="{{ tag.getTagId }}">
+        <label>{{ tag.getTag }}</label><br>
         {% endfor %}
         <input type="submit" value="Submit">
     </form>

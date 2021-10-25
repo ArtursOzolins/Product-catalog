@@ -2,8 +2,6 @@
 
 namespace App\Repositories;
 
-require_once 'app/config.php';
-
 use App\Models\Category;
 use App\Models\Collections\CategoriesCollection;
 use PDO;

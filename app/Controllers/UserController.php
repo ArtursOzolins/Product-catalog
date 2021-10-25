@@ -5,6 +5,7 @@ namespace App\Controllers;
 use App\Models\User;
 use App\Repositories\MysqlUsersRepository;
 use App\Repositories\UsersRepository;
+use App\Services\UsersServices\RequestService;
 use App\Validations\Errors\Errors;
 use App\Validations\UserValidation;
 use InvalidArgumentException;
@@ -14,16 +15,16 @@ use Twig\Loader\FilesystemLoader;
 class UserController
 {
     private Environment $twig;
-    private UsersRepository $repository;
     private UserValidation $userValidation;
+    private RequestService $requestService;
 
     public function __construct($container)
     {
-        $this->repository = $container->get(UsersRepository::class);
+        $this->requestService = new RequestService($container);
 
         $loader = new FilesystemLoader('app/Views');
         $this->twig = new Environment($loader);
-        $this->userValidation = new UserValidation($this->repository);
+        $this->userValidation = new UserValidation();
     }
 
     public function index()
@@ -39,9 +40,9 @@ class UserController
     public function register()
     {
         try {
-            $this->userValidation->validateUsername($_POST['login']);
+            $this->userValidation->validateUsername($this->requestService->getRepository(), $_POST['login']);
             $this->userValidation->validatePasswordLength($_POST['password']);
-            $this->repository->registrate(new User($_POST['login'], password_hash($_POST['password'], PASSWORD_DEFAULT)));
+            $this->requestService->registrateToRepository(new User($_POST['login'], password_hash($_POST['password'], PASSWORD_DEFAULT)));
             header('Location: /');
         } catch (InvalidArgumentException $e)
         {

@@ -3,6 +3,7 @@
 namespace App\Middlewares;
 
 use App\Repositories\UsersRepository;
+use App\Services\UsersServices\RequestService;
 use App\Validations\UserValidation;
 use Twig\Environment;
 use Twig\Loader\FilesystemLoader;
@@ -10,11 +11,11 @@ use Twig\Loader\FilesystemLoader;
 class Middleware
 {
     private Environment $twig;
-    private UsersRepository $repository;
+    private RequestService $requestService;
 
     public function __construct($container)
     {
-        $this->repository = $container->get(UsersRepository::class);
+        $this->requestService = new RequestService($container);
 
         $loader = new FilesystemLoader('app/Views');
         $this->twig = new Environment($loader);
@@ -27,7 +28,7 @@ class Middleware
 
     public function authenticate()
     {
-        $user = $this->repository->getOne($_POST['login']);
+        $user = $this->requestService->getOneFromRepository($_POST['login']);
         if ($user !== null)
         {
             if (password_verify($_POST['password'], $user->getUserPassword()) === true)

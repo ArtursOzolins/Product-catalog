@@ -2,8 +2,6 @@
 
 namespace App\Repositories;
 
-require_once 'app/config.php';
-
 use App\Models\Collections\TagsCollection;
 use App\Models\Product;
 use App\Models\Tag;
@@ -28,7 +26,6 @@ class MysqlTagsRepository implements TagsRepository
         } catch (PDOException $e) {
             throw new PDOException($e->getMessage(), (int)$e->getCode());
         }
-        $this->collection = new TagsCollection();
     }
 
     public function getTags(): TagsCollection
@@ -37,11 +34,7 @@ class MysqlTagsRepository implements TagsRepository
         $stmt = $this->connection->query($sql);
         $allData = $stmt->fetchAll();
 
-        foreach ($allData as $data)
-        {
-            $this->collection->addToTagsCollection(new Tag($data['tag_id'], $data['tag']));
-        }
-        return $this->collection;
+        return $this->collection = new TagsCollection($allData);
     }
 
     public function addToTagMap(Product $product, string $tag_id): void
@@ -59,12 +52,10 @@ class MysqlTagsRepository implements TagsRepository
         $sql = "SELECT product FROM tag_map WHERE tag_id = '$tag_id'";
         $stmt = $this->connection->query($sql);
         $allData = $stmt->fetchAll();
-
-
         $found = [];
         foreach ($allData as $data)
         {
-            array_push($found, $data['product']);
+            $found[] = $data['product'];
         }
         return $found;
     }

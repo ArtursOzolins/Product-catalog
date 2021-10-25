@@ -2,8 +2,6 @@
 
 namespace App\Repositories;
 
-require_once 'app/config.php';
-
 use App\Models\Collections\ProductsCollection;
 use App\Models\Product;
 use LengthException;
@@ -45,19 +43,6 @@ class MysqlProductsRepository implements ProductsRepository
         return $this->collection;
     }
 
-    public function getTags(): array
-    {
-        $sql = "SELECT tag_id, tag FROM tags";
-        $stmt = $this->connection->query($sql);
-        $allData = $stmt->fetchAll();
-
-        foreach ($allData as $data)
-        {
-            $tags[] = ['tag_id' => $data['tag_id'], 'tag' => $data['tag']];
-        }
-
-        return $tags;
-    }
 
     public function addToProducts(string $user, Product $product): void
     {
